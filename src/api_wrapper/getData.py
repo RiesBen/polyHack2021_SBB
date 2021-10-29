@@ -29,6 +29,7 @@ class api_interface():
     def get_information():
         pass
 
+
 class timetable_info(api_interface):
     """
     "https://b2p-int.api.sbb.ch/"
@@ -83,6 +84,7 @@ class timetable_info(api_interface):
         print(r.status_code)
         print(r.text)
         return json.loads(r.text)
+
 
 class journey_maps_serivce(api_interface):
     style: str = "base_bright_v2" #"base_dark_v2
@@ -141,6 +143,7 @@ def generate_route_dict(fromStationID:int=8503000, toStationID:int=8507000, mot:
                          "toStationhID": toStationID,
                          "mot": mot})
 
+
 class journey_maps_routing(api_interface):
     header = {"x-api-key": m_key, }
     adress: str = "https://journey-maps.api.sbb.ch:443"
@@ -167,6 +170,7 @@ class journey_maps_routing(api_interface):
         print(r.text)
         #return json.load(r.text)
 
+
 class swiss_topo_maps(api_interface):
     adress: str
 
@@ -182,8 +186,10 @@ class outdoor_active(api_interface):
 class UMTS_3G_coverage(api_interface):
     adress: str
 
+
 class Journey_service(api_interface):
     adress: str
+
 
 class POI_service(api_interface):
     adress: str
