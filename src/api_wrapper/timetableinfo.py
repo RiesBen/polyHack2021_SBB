@@ -1,7 +1,7 @@
 import json
 import requests
 from requests.auth import HTTPBasicAuth
-from src.api_wrapper.data import u,p, s_key, m_key
+from src.api_wrapper.data import u,p, s_key, m_key, t_key
 from collections import OrderedDict
 import xml.etree.ElementTree as ET
 from requests.auth import AuthBase
@@ -25,15 +25,64 @@ class api_interface():
     conID : str
     data: list
 
-    def get_information(self):
+    @staticmethod
+    def get_information():
         pass
 
 class timetable_info(api_interface):
+    """
+    "https://b2p-int.api.sbb.ch/"
+    """
+    adress = "https://b2p.api.sbb.ch/api/"
+    tokenAdress : str = "https://sso-int.sbb.ch/auth/realms/SBB_Public/protocol/openid-connect/token"
+    user : str = "af929f08"
+    conID: str = 'PLY223P'
+    accessToken :str = ""
 
-    adress : str = "https://b2p-int.api.sbb.ch/" #"https://developer.sbb.ch/apis/b2p/information"
-    endp : str = "https://sso-int.sbb.ch/auth/realms/SBB_Public/protocol/openid-connect/token"
-    conID : str = "PLY223P"
+    @staticmethod
+    def get_token():
+        """
+        ##curl -X POST \
+        # 'https://sso.sbb.ch/auth/realms/SBB_Public/protocol/openid-connect/token' \
+        # -d 'grant_type=client_credentials&client_id=$clientId&client_secret=$clientSecret'
+        :return:
+        """
+        credential ={
+            "grant_type":'client_credentials',
+            "client_id": timetable_info.user,
+            "client_secret": t_key
+        }
+        r = requests.post(url=timetable_info.tokenAdress, data=credential)
+        print(r.url)
+        print(r.status_code)
+        print(r.text)
+        timetable_info.accessToken = json.loads(r.text)['error']
+        print(timetable_info.accessToken)
 
+    @staticmethod
+    def get_locationRequest(location="Bern")->dict:
+        """
+        url -X GET \
+         'https://b2p.api.sbb.ch/api/locations?name=Bern' \
+         -H 'Authorization: Bearer $accessToken' \
+         -H 'Cache-Control: no-cache' \
+         -H 'Accept: application/json' \
+         -H 'X-Contract-Id: ABC1234' \
+         -H 'X-Conversation-Id: e5eeb775-1e0e-4f89-923d-afa780ef844b
+
+        """
+        headers ={
+            "Authorization:":'Bearer '+timetable_info.accessToken,
+            "Cache-Control:": "no-cache",
+            "Accept:": "application/json",
+            "X-Contract-Id": timetable_info.conID,
+            "X-Conversation-ID": "fun"
+        }
+        r = requests.get(url=timetable_info.adress+'/locations?name='+location, headers=headers)
+        print(r.url)
+        print(r.status_code)
+        print(r.text)
+        return json.loads(r.text)
 
 class journey_maps_serivce(api_interface):
     style: str = "base_bright_v2" #"base_dark_v2
@@ -97,7 +146,7 @@ class journey_maps_routing(api_interface):
     adress: str = "https://journey-maps.api.sbb.ch:443"
 
     @staticmethod
-    def get_route_information(route:dict):
+    def get_route_information(route:OrderedDict):
         request_url = journey_maps_routing.adress + '/v1/route?' + "&".join(
             [str(k) + "=" + str(v) for k, v in route.items()])
         r = requests.get(request_url, headers=journey_maps_routing.header)
@@ -108,10 +157,9 @@ class journey_maps_routing(api_interface):
         #return json.load(r.text)
 
     @staticmethod
-    def get_transfer_information(client:dict):
-
+    def get_transfer_information(transfer:OrderedDict):
         request_url = journey_maps_routing.adress + '/v1/transfer?' + "&".join(
-            [str(k) + "=" + str(v) for k, v in route.items()])
+            [str(k) + "=" + str(v) for k, v in transfer.items()])
         r = requests.get(request_url, headers=journey_maps_routing.header)
 
         print(r.url)
@@ -144,8 +192,9 @@ class POI_service(api_interface):
 
 if __name__ == "__main__":
     #SBB Timetables:
-    #Todo: does not work!
-    #json_dict = timetable_info.get_information()
+    #Todo: does not work! - Need Client registration! https://b2p-int.app.sbb.ch/docs/index.html
+    #timetable_info.get_token()
+    #json_dict = timetable_info.get_locationRequest()
     #print(json_dict)
 
     #journey_maps
@@ -155,8 +204,11 @@ if __name__ == "__main__":
 
     #journey_route
     ## route
-    # Todo: does not work!
-    #journey_maps_routing.get_route_information(generate_route_dict())
+    # Todo: does not work! - A bug on the server side?
+    #https: // journey - maps.api.sbb.ch: 443 / v1 / route?fromStationID = 8503000 & toStationhID = 8507000 & mot = train
+    #500
+    #{"status": 500, "message": "[2006288006] Unexpected error occurred."}
+    journey_maps_routing.get_route_information(generate_route_dict())
 
     ##transfer:
     #visualize -> https://geojson.io/#map=10/47.1941/7.9879
