@@ -306,6 +306,7 @@ class outdoor_active(api_interface):
     def get_dataframe_of_ch(self):
         ids = self.get_swiss_route_IDs()
         ids = [i['id'] for i in ids]
+        self.ids = ids
         raw_data = self.get_route_info(IDs=ids)
         return pd.DataFrame.from_dict(raw_data)
 
