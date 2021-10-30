@@ -3,29 +3,14 @@ import requests
 import uuid
 from datetime import timezone, date, datetime, time
 from requests.auth import HTTPBasicAuth
-from src.api_wrapper.data import u,p, s_key, m_key, t_key, w_key
+from src.api_wrapper.data import s_key, m_key, t_key, w_key
 from collections import OrderedDict
 import xml.etree.ElementTree as ET
 from requests.auth import AuthBase
 from src.api_wrapper import UGM_3G_data
 
-class TokenAuth(AuthBase):
-    """Implements a custom authentication scheme."""
-
-    def __init__(self, token):
-        self.token = token
-
-    def __call__(self, r):
-        """Attach an API token to a custom auth header."""
-        r.headers['X-TokenAuth'] = f'{self.token}'  # Python 3.6+
-        return r
-
-
-
 class api_interface():
     adress : str
-
-
     def __init__(self):
         pass
 
