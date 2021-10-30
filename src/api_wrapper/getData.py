@@ -3,7 +3,7 @@ import requests
 import uuid
 from datetime import timezone, date, datetime, time
 from requests.auth import HTTPBasicAuth
-from src.api_wrapper.data import s_key, m_key, t_key, w_key
+from src.api_wrapper.data import s_key, m_key, t_key, w_key, j_key
 from collections import OrderedDict
 import xml.etree.ElementTree as ET
 from requests.auth import AuthBase
@@ -42,7 +42,6 @@ class timetable_info(api_interface):
     token_timestamp = None
 
     def __init__(self):
-
         self.get_token()
 
     def get_token(self):
@@ -63,8 +62,6 @@ class timetable_info(api_interface):
             self.token_request = r
             self.token_timestamp = date.today()
             self.accessToken = r['access_token']
-            print("recived Token")
-            print(self.accessToken)
         else:
             print("token was still valid")
 
@@ -81,7 +78,8 @@ class timetable_info(api_interface):
         """
         self.get_token()
 
-        query = {"name": location}
+        query = {"name": location,
+                 }
         self.conv_id = uuid.uuid4()  # conversation Id
         auth ={
             "Authorization": f"Bearer {self.accessToken}",
@@ -183,6 +181,18 @@ def generate_transfer_dict(fromStationID:int=8503000, toStationID:int=8507000, m
                          "client": client,
                          "clientVersion": clientVersion})
 
+def generate_route_dict(fromStationID:int=8503000, toStationID:int=8507000, mot:str="train")-> OrderedDict:
+    """
+    Helper for inOrder https request.
+
+    :param fromStationID:
+    :param toStationID:
+    :param mot:
+    :return:
+    """
+    return OrderedDict({"fromStationID": fromStationID,
+                         "toStationhID": toStationID,
+                         "mot": mot})
 
 class journey_maps_routing(api_interface):
     header = {"x-api-key": m_key, }
@@ -197,10 +207,10 @@ class journey_maps_routing(api_interface):
         print(self.r.url)
         print(self.r.status_code)
         print(self.r.text)
-        return json.load(self.r.text)
+        return json.loads(self.r.text)
 
 
-    def get_transfer_information(self, transfer:OrderedDict):
+    def get_transfer_information(self, transfer:OrderedDict)->dict:
         request_url = self.adress + '/v1/transfer'
 
         self.r = requests.get(request_url, headers=self.header, params=transfer)
@@ -230,6 +240,9 @@ class weather_forcast(api_interface):
     tokenAdress : str = "https://sso.sbb.ch/auth/realms/SBB_Public/protocol/openid-connect/token"
     token_timestamp = None
     user : str = "56bae62c"
+
+    def __init__(self):
+        self.get_token()
 
     def get_token(self):
         """
@@ -262,7 +275,7 @@ class weather_forcast(api_interface):
         :param weather_request:
         :return:
         """
-        print(weather_request)
+        self.get_token()
         auth ={
             "Authorization": f"Bearer {self.accessToken}",
             "'Accept": "application/json",
@@ -303,8 +316,63 @@ class UMTS_3G_coverage(api_interface):
         self.xTree = ET.parse(self.data_iso_path)
 
 
-class Journey_service(api_interface):
-    adress: str
+class journey_service(api_interface):
+    adress: str = "https://journey-service-int.api.sbb.ch/b2c/v2"
+    tokenAdress : str = "https://login.microsoftonline.com/2cda5d11-f0ac-46b3-967d-af1b2e1bd01a/oauth2/v2.0/token"
+    tokenScope : str = " api://c11fa6b1-edab-4554-a43d-8ab71b016325/.default"
+    userID : str = "10e4b078-dd1f-4faa-8f0b-a0111ddd5398"
+    token_timestamp = None
+
+    def __init__(self):
+        self.get_token()
+
+    def get_token(self):
+        """
+        ##curl -X POST \
+        # 'https://sso.sbb.ch/auth/realms/SBB_Public/protocol/openid-connect/token' \
+        # -d 'grant_type=client_credentials&client_id=$clientId&client_secret=$clientSecret'
+        :return:
+        """
+        delta = (self.token_timestamp-date.today()).seconds/60 > 30 if(not self.token_timestamp is None) else True
+        if(delta):
+            credential = {
+                'grant_type': 'client_credentials',
+                'client_id': self.userID,
+                'client_secret': j_key,
+                'scope': self.tokenScope
+            }
+            r = requests.post(url=self.tokenAdress, data=credential).json()
+            self.token_request = r
+            self.token_timestamp = date.today()
+            self.accessToken = r['access_token']
+        else:
+            print("token was still valid")
+
+
+    def get_locationRequestByCoords(self, coords=[47.3765468379,8.5356070469]) -> dict:
+        """
+        url -X GET \
+         'https://b2p.api.sbb.ch/api/locations?name=Bern' \
+         -H 'Authorization: Bearer $accessToken' \
+         -H 'Cache-Control: no-cache' \
+         -H 'Accept: application/json' \
+         -H 'X-Contract-Id: ABC1234' \
+         -H 'X-Conversation-Id: e5eeb775-1e0e-4f89-923d-afa780ef844b
+
+        """
+        self.get_token()
+        self.conv_id = uuid.uuid4()  # conversation Id
+        auth = {
+            "Authorization": f"Bearer {self.accessToken}",
+            "X-Contract-Id": self.userID,
+            "X-Conversation-ID": str(self.conv_id)
+        }
+
+        self.r = requests.get(url=self.adress+"/locations/"+ "/".join(map(str,coords)) , headers=auth)
+        print(self.r.url)
+        print(self.r.status_code)
+        print(self.r.text)
+        return json.loads(self.r.text)
 
 
 class POI_service(api_interface):
@@ -319,6 +387,7 @@ if __name__ == "__main__":
     #timetable = timetable_info()
     #json_dict = timetable.get_locationRequest()
     #json_dict = timetable.get_tripRequest(trip=generate_trip_dict())
+    #json_dict = timetable.get_locationRequestByCoords()
     #print(json_dict)
 
 
@@ -341,7 +410,7 @@ if __name__ == "__main__":
     ##transfer:
     #visualize -> https://geojson.io/#map=10/47.1941/7.9879
     # Works!
-    #geoJson_dict = jmR.get_route_information(generate_transfer_dict())
+    #geoJson_dict = jmR.get_transfer_information(generate_transfer_dict())
     #print(geoJson_dict)
 
     # Map Swisstopo
@@ -364,3 +433,9 @@ if __name__ == "__main__":
     #root_node = ET.
 
     #Points of Interests – POI-Service.
+
+
+    #journey service
+    jrS = journey_service()
+    jrS.get_token()
+    jrS.get_locationRequestByCoords()
