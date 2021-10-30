@@ -7,6 +7,7 @@ from src.api_wrapper.data import s_key, m_key, t_key, w_key
 from collections import OrderedDict
 import xml.etree.ElementTree as ET
 from requests.auth import AuthBase
+import pandas as pd
 from src.api_wrapper import UGM_3G_data
 
 class api_interface():
@@ -301,6 +302,12 @@ class outdoor_active(api_interface):
             s_ids+=","
         r = requests.get('http://www.outdooractive.com/api/project/api-dev-oa/oois/'+s_ids[:-1]+'?key=yourtest-outdoora-ctiveapi',headers=jsonhead)
         return json.loads(r.text)["tour"]
+
+    def get_dataframe_of_ch(self):
+        ids = self.get_swiss_route_IDs()
+        ids = [i['id'] for i in ids]
+        raw_data = self.get_route_info(IDs=ids)
+        return pd.DataFrame.from_dict(raw_data)
 
 class UMTS_3G_coverage(api_interface):
     adress: str
