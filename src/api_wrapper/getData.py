@@ -195,9 +195,14 @@ class journey_maps_routing(api_interface):
 
 
     def get_transfer_information(self, transfer:OrderedDict):
-        request_url = self.adress + '/v1/transfer?' + "&".join(
-            [str(k) + "=" + str(v) for k, v in transfer.items()])
-        self.r = requests.get(request_url, headers=self.header)
+        request_url = self.adress + '/v1/transfer'
+
+        params = transfer.copy()
+        params['lang'] = 'de'
+        params['client'] = 'sbb-mobile-web-prod'
+        params['clientVersion'] = '1'
+
+        self.r = requests.get(request_url, headers=self.header, params=params)
 
         print(self.r.url)
         print(self.r.status_code)
