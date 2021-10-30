@@ -300,37 +300,8 @@ class weather_forcast(api_interface):
         return weather
 
 
-class outdoor_active(api_interface):
-    
-    def get_swiss_route_IDs(self):
-        jsonhead={'Accept':'application/json'}
-        r=requests.get(url='http://www.outdooractive.com/api/project/api-dev-oa/nearby/tour?location=8.23656,46.79803&radius=50000&key=yourtest-outdoora-ctiveapi', headers=jsonhead)
-        return json.loads(r.text)["result"]
-
-    def get_route_info(self, IDs):
-        jsonhead={'Accept':'application/json'}
-        s_ids=""
-        for i in IDs:
-            s_ids+=i
-            s_ids+=","
-        r = requests.get('http://www.outdooractive.com/api/project/api-dev-oa/oois/'+s_ids[:-1]+'?key=yourtest-outdoora-ctiveapi',headers=jsonhead)
-        return json.loads(r.text)["tour"]
-
-    def get_dataframe_of_ch(self):
-        ids = self.get_swiss_route_IDs()
-        ids = [i['id'] for i in ids]
-        self.ids = ids
-        raw_data = self.get_route_info(IDs=ids)
-        return pd.DataFrame.from_dict(raw_data)
-
-class UMTS_3G_coverage(api_interface):
-    adress: str
-    data_dir_path = os.path.dirname(UGM_3G_data.__file__)
-    data_gm_path = data_dir_path+"/Metadata_gm03.xml"
-    data_iso_path = data_dir_path+"/Metadata_gm03.xml"
-
-    def load(self):
-        self.xTree = ET.parse(self.data_iso_path)
+def get_coords_request(lat=47.3765468379, lon=8.5356070469)->OrderedDict:
+    return OrderedDict({'lat':lat, "lon":lon})
 
 
 class journey_service(api_interface):
@@ -365,8 +336,7 @@ class journey_service(api_interface):
         else:
             print("token was still valid")
 
-
-    def get_locationRequestByCoords(self, coords=[47.3765468379,8.5356070469]) -> dict:
+    def get_locationRequestByCoords(self, coords=get_coords_request()) -> dict:
         """
         url -X GET \
          'https://b2p.api.sbb.ch/api/locations?name=Bern' \
@@ -385,11 +355,45 @@ class journey_service(api_interface):
             "X-Conversation-ID": str(self.conv_id)
         }
 
-        self.r = requests.get(url=self.adress+"/locations/"+ "/".join(map(str,coords)) , headers=auth)
-        print(self.r.url)
-        print(self.r.status_code)
-        print(self.r.text)
+        self.r = requests.get(url=self.adress+"/locations/"+ "/".join([str(v) for k,v in coords.items()]) , headers=auth)
+        #print(self.r.url)
+        #print(self.r.status_code)
+        #print(self.r.text)
         return json.loads(self.r.text)
+
+
+class outdoor_active(api_interface):
+    
+    def get_swiss_route_IDs(self):
+        jsonhead={'Accept':'application/json'}
+        r=requests.get(url='http://www.outdooractive.com/api/project/api-dev-oa/nearby/tour?location=8.23656,46.79803&radius=50000&key=yourtest-outdoora-ctiveapi', headers=jsonhead)
+        return json.loads(r.text)["result"]
+
+    def get_route_info(self, IDs):
+        jsonhead={'Accept':'application/json'}
+        s_ids=""
+        for i in IDs:
+            s_ids+=i
+            s_ids+=","
+        r = requests.get('http://www.outdooractive.com/api/project/api-dev-oa/oois/'+s_ids[:-1]+'?key=yourtest-outdoora-ctiveapi',headers=jsonhead)
+        return json.loads(r.text)["tour"]
+
+    def get_dataframe_of_ch(self):
+        ids = self.get_swiss_route_IDs()
+        ids = [i['id'] for i in ids]
+        self.ids = ids
+        raw_data = self.get_route_info(IDs=ids)
+        return pd.DataFrame.from_dict(raw_data)
+
+
+class UMTS_3G_coverage(api_interface):
+    adress: str
+    data_dir_path = os.path.dirname(UGM_3G_data.__file__)
+    data_gm_path = data_dir_path+"/Metadata_gm03.xml"
+    data_iso_path = data_dir_path+"/Metadata_gm03.xml"
+
+    def load(self):
+        self.xTree = ET.parse(self.data_iso_path)
 
 
 class POI_service(api_interface):
@@ -455,4 +459,5 @@ if __name__ == "__main__":
     #journey service
     jrS = journey_service()
     jrS.get_token()
-    jrS.get_locationRequestByCoords()
+    json_dict = jrS.get_locationRequestByCoords()
+    print(json_dict)
