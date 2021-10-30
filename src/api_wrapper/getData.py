@@ -287,11 +287,20 @@ class weather_forcast(api_interface):
 
 
 class outdoor_active(api_interface):
+    
     def get_swiss_route_IDs(self):
         jsonhead={'Accept':'application/json'}
         r=requests.get(url='http://www.outdooractive.com/api/project/api-dev-oa/nearby/tour?location=8.23656,46.79803&radius=50000&key=yourtest-outdoora-ctiveapi', headers=jsonhead)
         return json.loads(r.text)["result"]
 
+    def get_route_info(self, IDs):
+        jsonhead={'Accept':'application/json'}
+        s_ids=""
+        for i in IDs:
+            s_ids+=i
+            s_ids+=","
+        r = requests.get('http://www.outdooractive.com/api/project/api-dev-oa/oois/'+s_ids[:-1]+'?key=yourtest-outdoora-ctiveapi',headers=jsonhead)
+        return json.loads(r.text)["tour"]
 
 class UMTS_3G_coverage(api_interface):
     adress: str
