@@ -136,7 +136,7 @@ class journey_maps_serivce(api_interface):
 helper functions:
 """
 ## transfer
-def generate_transfer_dict(client:str= "polyhack", clientVersion:str="1.0.0", lang="de", fromStationID:int=8503000,
+def generate_transfer_dict2(client:str= "polyhack", clientVersion:str="1.0.0", lang="de", fromStationID:int=8503000,
                            fromTrack:str="L", toStationID:int=8507000, toTrack:int = 10,
                            indoor:bool=True, fromTransportType:str="bus", toTransportType:str="train")-> OrderedDict:
     """
@@ -165,7 +165,8 @@ def generate_transfer_dict(client:str= "polyhack", clientVersion:str="1.0.0", la
                      "fromTransportType": fromTransportType,
                      "toTransportType": toTransportType})
 
-def generate_transfer_dict(fromStationID:int=8503000, toStationID:int=8507000, mot:str= "train")-> OrderedDict:
+def generate_transfer_dict(fromStationID:int=8503000, toStationID:int=8507000, mot:str= "train", \
+        lang:str='de', client:str='sbb-mobile-web-prod', clientVersion:int=1)-> OrderedDict:
     """
     Helper for inOrder https request.
 
@@ -175,8 +176,11 @@ def generate_transfer_dict(fromStationID:int=8503000, toStationID:int=8507000, m
     :return:
     """
     return OrderedDict({"fromStationID": fromStationID,
-                         "toStationhID": toStationID,
-                         "mot": mot})
+                         "toStationID": toStationID,
+                         "mot": mot,
+                         "lang": lang,
+                         "client": client,
+                         "clientVersion": clientVersion})
 
 
 class journey_maps_routing(api_interface):
@@ -192,23 +196,18 @@ class journey_maps_routing(api_interface):
         print(self.r.url)
         print(self.r.status_code)
         print(self.r.text)
-        return json.loads(self.r.text)
+        return json.load(self.r.text)
 
 
     def get_transfer_information(self, transfer:OrderedDict):
         request_url = self.adress + '/v1/transfer'
 
-        params = transfer.copy()
-        params['lang'] = 'de'
-        params['client'] = 'sbb-mobile-web-prod'
-        params['clientVersion'] = '1'
-
-        self.r = requests.get(request_url, headers=self.header, params=params)
+        self.r = requests.get(request_url, headers=self.header, params=transfer)
 
         print(self.r.url)
         print(self.r.status_code)
         print(self.r.text)
-        return json.load(self.r.text)
+        return json.loads(self.r.text)
 
 
 class swiss_topo_maps(api_interface):
