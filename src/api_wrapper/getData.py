@@ -313,6 +313,7 @@ class POI_service(api_interface):
 
 
 if __name__ == "__main__":
+    pass
     #SBB Timetables:
     # Works!
     #timetable = timetable_info()
