@@ -42,6 +42,7 @@ class timetable_info(api_interface):
     token_timestamp = None
 
     def __init__(self):
+
         self.get_token()
 
     def get_token(self):
@@ -51,7 +52,7 @@ class timetable_info(api_interface):
         # -d 'grant_type=client_credentials&client_id=$clientId&client_secret=$clientSecret'
         :return:
         """
-        delta = (self.token_timestamp-date.today())/60 > 30 if(not self.token_timestamp is None) else True
+        delta = (self.token_timestamp-date.today()).seconds/60 > 30 if(not self.token_timestamp is None) else True
         if(delta):
             credential ={
                 "grant_type":'client_credentials',
@@ -301,10 +302,9 @@ class POI_service(api_interface):
 if __name__ == "__main__":
     #SBB Timetables:
     # Works!
-    #timetable = timetable_info()
-    #timetable.get_token()
-    #json_dict = timetable.get_locationRequest()
-    #json_dict = timetable.get_tripRequest(trip=generate_trip_dict())
+    timetable = timetable_info()
+    json_dict = timetable.get_locationRequest()
+    json_dict = timetable.get_tripRequest(trip=generate_trip_dict())
     print(json_dict)
 
 
