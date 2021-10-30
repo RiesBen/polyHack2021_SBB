@@ -1,14 +1,12 @@
 import json, os
 import requests
 import uuid
-from datetime import timezone, date, datetime, time
-from requests.auth import HTTPBasicAuth
-from src.api_wrapper.data import s_key, m_key, t_key, w_key, j_key
+from datetime import date, datetime, time
+from src.backend.api_wrapper.data import s_key, m_key, t_key, w_key, j_key
 from collections import OrderedDict
 import xml.etree.ElementTree as ET
-from requests.auth import AuthBase
 import pandas as pd
-from src.api_wrapper import UGM_3G_data
+from src.backend.api_wrapper import UGM_3G_data
 
 class api_interface():
     adress : str
@@ -27,7 +25,7 @@ def generate_trip_dict(date:date=date.fromisoformat('2021-10-29'),
     :return:
     """
     return OrderedDict({"date": str(date),
-                         "time": str(time.hour)+":"+str(time.minute),
+                         "time": str(time.strftime('%H:%M')),
                          "originId": str(originId),
                          "destinationId":str(destinationId)})
 
@@ -64,7 +62,8 @@ class timetable_info(api_interface):
             self.token_timestamp = date.today()
             self.accessToken = r['access_token']
         else:
-            print("token was still valid")
+            pass
+            #print("token was still valid")
 
     def get_locationRequest(self, location="Bern")->dict:
         """
@@ -106,7 +105,7 @@ class timetable_info(api_interface):
         """
         self.get_token()
 
-        print(trip)
+        #print(trip)
 
         self.conv_id = uuid.uuid4()  # conversation Id
         auth ={
@@ -116,9 +115,9 @@ class timetable_info(api_interface):
         }
         #print("auth conversation id: " + str(self.conv_id))
         self.r = requests.get(url=self.adress+'/trips', headers=auth, params=dict(trip))
-        print(self.r.url)
-        print(self.r.status_code)
-        print(self.r.text)
+        #print(self.r.url)
+        #print(self.r.status_code)
+        #print(self.r.text)
         return json.loads(self.r.text)
 
 
@@ -225,7 +224,9 @@ class journey_maps_routing(api_interface):
 class swiss_topo_maps(api_interface):
     adress: str
 
-def get_weather_request(time:datetime=datetime.fromisoformat('2021-10-29T00:00:00'), parameters:str=['t_2m:C','relative_humidity_2m:p', "wind_speed_10m:ms","precip_1h:mm"],
+#
+def get_weather_request(time:datetime=datetime.fromisoformat('2021-10-29T00:00:00'),
+                        parameters:str=['t_2m:C','relative_humidity_2m:p', "wind_speed_10m:ms","precip_1h:mm","snow_depth:cm","sunshine_europe_segmented"  ],
                         location:str=[47.4245,9.3767])->OrderedDict:
     return OrderedDict({"validateTime":str(time.astimezone().isoformat()),
                         "parameters":str(",".join(parameters)),
@@ -267,7 +268,6 @@ class weather_forcast(api_interface):
         else:
             print("token was still valid")
 
-
     def get_weather(self, weather_request:OrderedDict):
         """
         curl -X GET --header 'Accept: application/json' --header 'Authorization: Bearer $accesToken
@@ -279,8 +279,8 @@ class weather_forcast(api_interface):
         self.get_token()
         auth ={
             "Authorization": f"Bearer {self.accessToken}",
-            "'Accept": "application/json",
-            #"X-Contract-Id": self.conID,
+            "Accept": "application/json",
+            #"X-Contract-Id": self.user,
             #"X-Conversation-ID": str(self.conv_id)
         }
 
@@ -292,6 +292,8 @@ class weather_forcast(api_interface):
         print()
 
         self.r = requests.get(self.adress+"/"+data, headers=auth)
+        print(self.r)
+        print(self.r.text)
         header = self.r.text.split("\n")[0].split(";")
         data = self.r.text.split("\n")[1].split(";")
 
@@ -334,7 +336,8 @@ class journey_service(api_interface):
             self.token_timestamp = date.today()
             self.accessToken = r['access_token']
         else:
-            print("token was still valid")
+            #print("token was still valid")
+            pass
 
     def get_locationRequestByCoords(self, coords=get_coords_request()) -> dict:
         """
@@ -364,9 +367,9 @@ class journey_service(api_interface):
 
 class outdoor_active(api_interface):
     
-    def get_swiss_route_IDs(self):
+    def get_swiss_route_IDs(self, coords = get_coords_request(lat=46.79803, lon=8.23656), radius = 50000):
         jsonhead={'Accept':'application/json'}
-        r=requests.get(url='http://www.outdooractive.com/api/project/api-dev-oa/nearby/tour?location=8.23656,46.79803&radius=50000&key=yourtest-outdoora-ctiveapi', headers=jsonhead)
+        r=requests.get(url='http://www.outdooractive.com/api/project/api-dev-oa/nearby/tour?location='+str(coords["lon"])+','+str(coords["lat"])+'&radius='+str(radius)+'&key=yourtest-outdoora-ctiveapi', headers=jsonhead)
         return json.loads(r.text)["result"]
 
     def get_route_info(self, IDs):
@@ -378,8 +381,8 @@ class outdoor_active(api_interface):
         r = requests.get('http://www.outdooractive.com/api/project/api-dev-oa/oois/'+s_ids[:-1]+'?key=yourtest-outdoora-ctiveapi',headers=jsonhead)
         return json.loads(r.text)["tour"]
 
-    def get_dataframe_of_ch(self):
-        ids = self.get_swiss_route_IDs()
+    def get_dataframe_of_ch(self,coords = get_coords_request(lat=46.79803, lon=8.23656), radius = 50000):
+        ids = self.get_swiss_route_IDs(coords=coords, radius=radius)
         ids = [i['id'] for i in ids]
         self.ids = ids
         raw_data = self.get_route_info(IDs=ids)
@@ -442,10 +445,10 @@ if __name__ == "__main__":
 
 
     #weather api
-    #wtR= weather_forcast()
-    #wtR.get_token()
-    #dayTime = datetime.today()
-    #json_dict = wtR.get_weather(get_weather_request(time=dayTime))
+    wtR= weather_forcast()
+    wtR.get_token()
+    dayTime = datetime.today()
+    json_dict = wtR.get_weather(get_weather_request(time=dayTime))
 
     #Outdoor activity
 
@@ -457,7 +460,7 @@ if __name__ == "__main__":
 
 
     #journey service
-    jrS = journey_service()
-    jrS.get_token()
-    json_dict = jrS.get_locationRequestByCoords()
-    print(json_dict)
+    #jrS = journey_service()
+    #jrS.get_token()
+    #json_dict = jrS.get_locationRequestByCoords()
+    #print(json_dict)
