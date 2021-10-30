@@ -14,8 +14,6 @@ class api_interface():
     def __init__(self):
         pass
 
-    def get_information():
-        pass
 
 def generate_trip_dict(date:date=date.fromisoformat('2021-10-29'),
                        time:time=time.fromisoformat("19:44"),
@@ -166,7 +164,7 @@ def generate_transfer_dict(client:str= "polyhack", clientVersion:str="1.0.0", la
                      "fromTransportType": fromTransportType,
                      "toTransportType": toTransportType})
 
-def generate_route_dict(fromStationID:int=8503000, toStationID:int=8507000, mot:str="train")-> OrderedDict:
+def generate_transfer_dict(fromStationID:int=8503000, toStationID:int=8507000, mot:str= "train")-> OrderedDict:
     """
     Helper for inOrder https request.
 
@@ -298,9 +296,9 @@ class POI_service(api_interface):
 if __name__ == "__main__":
     #SBB Timetables:
     #Todo: does not work! - Token works, timetable not yet.
-    #timetable = timetable_info()
-    #timetable.get_token()
-    #json_dict = timetable_info.get_locationRequest()
+    timetable = timetable_info()
+    timetable.get_token()
+    json_dict = timetable.get_locationRequest()
     #print(json_dict)
     #json_dict = timetable.get_tripRequest()
     #print(json_dict)
@@ -336,10 +334,10 @@ if __name__ == "__main__":
 
 
     #weather api
-    wtR= weather_forcast()
-    wtR.get_token()
-    json_dict = wtR.get_weather(get_weather_request())
-    print(json_dict)
+    #wtR= weather_forcast()
+    #wtR.get_token()
+    #json_dict = wtR.get_weather(get_weather_request())
+    #print(json_dict)
 
     #Outdoor activity
 
