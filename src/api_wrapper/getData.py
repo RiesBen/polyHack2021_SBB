@@ -215,7 +215,7 @@ class journey_maps_routing(api_interface):
 class swiss_topo_maps(api_interface):
     adress: str
 
-def get_weather_request(time:datetime=datetime.fromisoformat('2021-10-29T00:00:00'), parameters:str=['t_2m:C','relative_humidity_2m:p'],
+def get_weather_request(time:datetime=datetime.fromisoformat('2021-10-29T00:00:00'), parameters:str=['t_2m:C','relative_humidity_2m:p', "wind_speed_10m:ms","precip_1h:mm"],
                         location:str=[47.4245,9.3767])->OrderedDict:
     return OrderedDict({"validateTime":str(time.astimezone().isoformat()),
                         "parameters":str(",".join(parameters)),
@@ -227,11 +227,10 @@ class weather_forcast(api_interface):
         https://api.meteomatics.com/2021-10-29T00:00:00ZP1D:PT1H/t_2m:C,relative_humidity_2m:p/47.4245,9.3767/html?model=mix
     """
     #adress: str = "https://weather.api.sbb.ch/"
-    adress = 'https://api.meteomatics.com'
-    ci = '56bae62c'
-    tokenAdress : str = "https://sso-int.sbb.ch/auth/realms/SBB_Public/protocol/openid-connect/token"
+    adress = 'https://weather.api.sbb.ch'
+    tokenAdress : str = "https://sso.sbb.ch/auth/realms/SBB_Public/protocol/openid-connect/token"
     token_timestamp = None
-    user : str = "af929f08"
+    user : str = "56bae62c"
 
     def get_token(self):
         """
@@ -240,25 +239,30 @@ class weather_forcast(api_interface):
         # -d 'grant_type=client_credentials&client_id=$clientId&client_secret=$clientSecret'
         :return:
         """
-        delta = (self.token_timestamp-date.today())/60 > 30 if(not self.token_timestamp is None) else True
+
+        delta = (self.token_timestamp-date.today()).seconds/60 > 30 if(not self.token_timestamp is None) else True
         if(delta):
             credential ={
                 "grant_type":'client_credentials',
-                "client_id":self.user,
-                "client_secret": t_key
+                "client_id": self.user,
+                "client_secret": w_key
             }
             r = requests.post(url=self.tokenAdress, data=credential).json()
-            print(r)
             self.token_request = r
             self.token_timestamp = date.today()
             self.accessToken = r['access_token']
-            print("recived Token")
-            print(self.accessToken)
         else:
             print("token was still valid")
 
 
     def get_weather(self, weather_request:OrderedDict):
+        """
+        curl -X GET --header 'Accept: application/json' --header 'Authorization: Bearer $accesToken
+        https://weather.api.sbb.ch/2019-02-15T12:15:00ZP2D:PT1H/snowdepth:cm/46.2942,7.881
+
+        :param weather_request:
+        :return:
+        """
         print(weather_request)
         auth ={
             "Authorization": f"Bearer {self.accessToken}",
@@ -266,14 +270,21 @@ class weather_forcast(api_interface):
             #"X-Contract-Id": self.conID,
             #"X-Conversation-ID": str(self.conv_id)
         }
-        credential = {
-            "grant_type": 'client_credentials',
-            "client_id": self.user,
-            "client_secret": t_key
-        }
-        request_url = self.adress+"/"+weather_request['validateTime']+"/"+weather_request['parameters']+"/"+weather_request['location']+"/html?model=mix"
-        self.r = requests.get(request_url, data=credential) #, headers=auth
-        return self.r.text
+
+        #request_url = str(self.adress)
+        data=""+str(weather_request['validateTime'])
+        data+="/"+str(weather_request['parameters'])
+        data+="/"+str(weather_request['location'])+"/csv"
+        print(data)
+        print()
+
+        self.r = requests.get(self.adress+"/"+data, headers=auth)
+        header = self.r.text.split("\n")[0].split(";")
+        data = self.r.text.split("\n")[1].split(";")
+
+        cond ={k:v for k,v in zip(header[1:], data[1:])}
+        weather = {data[0]:cond}
+        return weather
 
 
 class outdoor_active(api_interface):
@@ -303,10 +314,10 @@ class POI_service(api_interface):
 if __name__ == "__main__":
     #SBB Timetables:
     # Works!
-    timetable = timetable_info()
-    json_dict = timetable.get_locationRequest()
-    json_dict = timetable.get_tripRequest(trip=generate_trip_dict())
-    print(json_dict)
+    #timetable = timetable_info()
+    #json_dict = timetable.get_locationRequest()
+    #json_dict = timetable.get_tripRequest(trip=generate_trip_dict())
+    #print(json_dict)
 
 
     #journey_maps
@@ -341,8 +352,8 @@ if __name__ == "__main__":
     #weather api
     #wtR= weather_forcast()
     #wtR.get_token()
-    #json_dict = wtR.get_weather(get_weather_request())
-    #print(json_dict)
+    #dayTime = datetime.today()
+    #json_dict = wtR.get_weather(get_weather_request(time=dayTime))
 
     #Outdoor activity
 
