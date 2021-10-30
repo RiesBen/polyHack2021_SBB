@@ -14,7 +14,6 @@ class api_interface():
     def __init__(self):
         pass
 
-
 def generate_trip_dict(date:date=date.fromisoformat('2021-10-29'),
                        time:time=time.fromisoformat("19:44"),
                        originId:int=8591122, destinationId:int=8591123)-> OrderedDict:
@@ -27,7 +26,7 @@ def generate_trip_dict(date:date=date.fromisoformat('2021-10-29'),
     :return:
     """
     return OrderedDict({"date": str(date),
-                         "time": str(time),
+                         "time": str(time.hour)+":"+str(time.minute),
                          "originId": str(originId),
                          "destinationId":str(destinationId)})
 
@@ -35,13 +34,15 @@ class timetable_info(api_interface):
     """
     "https://b2p-int.api.sbb.ch/"
     """
-    adress = "https://b2p.api.sbb.ch/api"
+    adress = "https://b2p-int.api.sbb.ch/api"
     tokenAdress : str = "https://sso-int.sbb.ch/auth/realms/SBB_Public/protocol/openid-connect/token"
     user : str = "af929f08"
     conID: str = 'PLY223P'
     accessToken :str = ""
     token_timestamp = None
 
+    def __init__(self):
+        self.get_token()
 
     def get_token(self):
         """
@@ -77,21 +78,19 @@ class timetable_info(api_interface):
          -H 'X-Conversation-Id: e5eeb775-1e0e-4f89-923d-afa780ef844b
 
         """
+        self.get_token()
 
         query = {"name": location}
-
         self.conv_id = uuid.uuid4()  # conversation Id
         auth ={
             "Authorization": f"Bearer {self.accessToken}",
             "X-Contract-Id": self.conID,
             "X-Conversation-ID": str(self.conv_id)
         }
-        print("current conversation id: " + str(self.conv_id))
-        print(auth)
         self.r = requests.get(url=self.adress+'/locations', headers=auth, params=query)
-        print(self.r.url)
-        print(self.r.status_code)
-        print(self.r.text)
+        #print(self.r.url)
+        #print(self.r.status_code)
+        #print(self.r.text)
         return json.loads(self.r.text)
 
     def get_tripRequest(self, trip:OrderedDict=generate_trip_dict())->dict:
@@ -105,6 +104,9 @@ class timetable_info(api_interface):
          -H 'X-Conversation-Id: e5eeb775-1e0e-4f89-923d-afa780ef844b
 
         """
+        self.get_token()
+
+        print(trip)
 
         self.conv_id = uuid.uuid4()  # conversation Id
         auth ={
@@ -112,9 +114,8 @@ class timetable_info(api_interface):
             "X-Contract-Id": self.conID,
             "X-Conversation-ID": str(self.conv_id)
         }
-        print("auth conversation id: " + str(self.conv_id))
-        print(auth)
-        self.r = requests.get(url=self.adress+'/locations', headers=auth, params=trip)
+        #print("auth conversation id: " + str(self.conv_id))
+        self.r = requests.get(url=self.adress+'/trips', headers=auth, params=dict(trip))
         print(self.r.url)
         print(self.r.status_code)
         print(self.r.text)
@@ -207,7 +208,7 @@ class journey_maps_routing(api_interface):
         print(self.r.url)
         print(self.r.status_code)
         print(self.r.text)
-        return json.load(r.text)
+        return json.load(self.r.text)
 
 
 class swiss_topo_maps(api_interface):
@@ -300,13 +301,12 @@ class POI_service(api_interface):
 
 if __name__ == "__main__":
     #SBB Timetables:
-    #Todo: does not work! - Token works, timetable not yet.
-    timetable = timetable_info()
-    timetable.get_token()
-    json_dict = timetable.get_locationRequest()
-    #print(json_dict)
-    #json_dict = timetable.get_tripRequest()
-    #print(json_dict)
+    # Works!
+    #timetable = timetable_info()
+    #timetable.get_token()
+    #json_dict = timetable.get_locationRequest()
+    #json_dict = timetable.get_tripRequest(trip=generate_trip_dict())
+    print(json_dict)
 
 
     #journey_maps
