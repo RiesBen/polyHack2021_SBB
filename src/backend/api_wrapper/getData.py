@@ -226,7 +226,7 @@ class swiss_topo_maps(api_interface):
 
 #
 def get_weather_request(time:datetime=datetime.fromisoformat('2021-10-29T00:00:00'),
-                        parameters:str=['t_2m:C','relative_humidity_2m:p', "wind_speed_10m:ms","precip_1h:mm","snow_depth:cm","sunshine_europe_segmented"  ],
+                        parameters:str=['t_2m:C','relative_humidity_2m:p', "wind_speed_10m:ms","precip_1h:mm","snow_depth:cm"],
                         location:str=[47.4245,9.3767])->OrderedDict:
     return OrderedDict({"validateTime":str(time.astimezone().isoformat()),
                         "parameters":str(",".join(parameters)),

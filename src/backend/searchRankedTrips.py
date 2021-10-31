@@ -31,6 +31,7 @@ def get_switzerland_rankings()->pd.DataFrame:
     siwss_df_path = os.path.dirname(__file__)+"/data/swiss_oa_df.obj"
     if(os.path.exists(siwss_df_path)):
         swiss_df = pd.read_pickle(siwss_df_path)
+        swiss_df = _calculate_ranking(swiss_df)
     else:
         raise IOError("could not find swiss df!")
     return swiss_df
@@ -65,8 +66,23 @@ def rank_trips(startLocation, starting_time, destination, destination_radius, ve
     oa_df["feat_lastMile"] = last_mileDist
 
     ## Rank Features:
-    oa_df = _calculate_ranking()
+    oa_df = _calculate_ranking(oa_df)
     return oa_df
+
+
+def get_weather_info(destination:pd.Series, starting_time )->dict:
+    """
+        enter row of hike locations, get weather info back.
+
+    :param destination: pd.Series
+    :param starting_time: datetime
+    :return:
+        dict
+            with weather info.
+    """
+    weather_request = getData.get_weather_request(time=starting_time+datetime.timedelta(minutes=destination['feat_tripTime']),
+                                                  location=[destination["startingPoint"]["lon"], destination["startingPoint"]["lat"]])
+    return weather.get_weather(weather_request)
 
 
 def _get_information(destination, destination_radius, startLocation, starting_time, verbose=False):
@@ -181,16 +197,35 @@ def _get_oa_info(destination_OBJ, destination_radius):
     return oa_df
 
 def _calculate_ranking(oa_df)->pd.DataFrame:
-    sortedtrip_oa_df = oa_df.sort_values(by=['feat_tripTime', "feat_lastMile", "feat_nsegments_trip"])
+    counts, axes = np.histogram(oa_df["feat_tripTime"].dropna(),
+                                bins=int(np.ceil(oa_df["feat_tripTime"].shape[0] / 40)))
+    bin_size = 2
+    if (len(axes) > 2):
+        time_bins = axes[2::2]
+        data0_bin = oa_df.where(oa_df.feat_tripTime < time_bins[0]).dropna(how="all")
+        data0_bin = data0_bin.sort_values(by=["feat_lastMile", "feat_nsegments_trip"], )
+        dfs = [data0_bin]
+        for i, time_bin in enumerate(time_bins[1:]):
+            data_bin = oa_df.where(oa_df.feat_tripTime < time_bin).where(
+                oa_df.feat_tripTime > time_bins[i - 1]).dropna(how="all")
+            data_bin = data_bin.sort_values(by=["feat_lastMile", "feat_nsegments_trip"], ascending=True)
+            dfs.append(data_bin)
+
+        sortedtrip_oa_df = data0_bin.append(dfs)
+    else:
+        sortedtrip_oa_df = oa_df.sort_values(by=["feat_tripTime", "feat_lastMile", "feat_nsegments_trip"], )
+
 
     return sortedtrip_oa_df
+
+
 
 
 if __name__ == "__main__":
     # Input:
     #all
-    df = get_switzerland_rankings()
-    print(df.shape)
+    #df = get_switzerland_rankings()
+    #print(df.shape)
 
     #querry
     startLocation = "Zürich HB"
