@@ -20,9 +20,6 @@ def render_button(content, id):
 """
 """
 def generate_table_pics(dataframe, max_rows=3):
-    from index import setup_callbacks
-    num = len(dataframe.columns)
-    setup_callbacks(num)
     return html.Table(
         # Header
         [html.Tr([html.Th(render_button(col, 'trip_' + str(colnum))) for colnum,col in enumerate(dataframe.columns)])] +
@@ -116,6 +113,10 @@ def get_activity_df():
     hike_dict = {'departure': ['16.00', '16.30'], 'arrival': ['16.30', '17.30'],  'POI': ['some location', 'some other location']}
     hike_data = pd.DataFrame(data=hike_dict)
     return hike_data
+
+
+def update_map(num):
+    selected_trip = num
 
 """
 render map
