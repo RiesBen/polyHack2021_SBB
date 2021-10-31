@@ -1,0 +1,2 @@
+ranked_data = None
+
