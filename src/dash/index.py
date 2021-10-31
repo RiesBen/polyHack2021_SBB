@@ -28,6 +28,7 @@ app.layout = html.Div([
                         html.H3('Trip data'),
                         dcc.Input(id="start_loc", type="text", placeholder="start location", style={'marginRight':'10px'}),
                         dcc.Input(id="dest_loc", type="text", placeholder="destination", style={'marginRight':'10px'}),
+                        dcc.Input(id="dest_rad", type="number", placeholder="radius km", min=1, max=100, step=1, style={'marginRight': '10px'}),
                         dcc.DatePickerSingle(
                             id='start_date',
                             date=date.today()
@@ -77,10 +78,11 @@ app.layout = html.Div([
     Input("start_date", "date"),
     State("start_loc", "value"),
     State("dest_loc", "value"),
+    State("dest_rad", "value"),
     State("start_time", "value")
 )
-def update_output(n_clicks, start_date, start_loc, dest_loc, start_time):
-    new_df = get_trips_df(n_clicks, start_loc, dest_loc, start_date, start_time)
+def update_output(n_clicks, start_date, start_loc, dest_loc, dest_rad, start_time):
+    new_df = get_trips_df(n_clicks, start_date, start_loc, dest_loc, dest_rad,  start_time)
     return generate_table_pics(new_df)
 
 

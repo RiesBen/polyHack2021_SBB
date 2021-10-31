@@ -12,3 +12,4 @@ dependencies:
   - scipy
   - requests
   - dash
+  - dash_html_components

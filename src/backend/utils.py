@@ -21,7 +21,7 @@ def get_weather_info(destination:pd.Series, starting_time )->dict:
     return weather.get_weather(weather_request)
 
 
-def get_pictures(destination:pd.Series, primaryPicture:bool=False, limit_pics=5, format=[300,200], force_redownload:bool=False)->list:
+def get_pictures(destination:pd.Series, primaryPicture:bool=False, limit_pics=5, format=[300,200], force_redownload:bool=False, url_mode=False)->list:
     """
     This function retrieves pictures for Hiking locations, provided
 
@@ -36,12 +36,13 @@ def get_pictures(destination:pd.Series, primaryPicture:bool=False, limit_pics=5,
     if(primaryPicture):
         possible_img = [destination['primaryImage']]
     else:
+        #print(destination['images'])
         possible_img = destination['images']["image"]
     img_paths = []
     if(len(possible_img)< limit_pics):
         limit_pics = len(possible_img)
 
     for img_dict in possible_img[:limit_pics]:
-        img_path = oa.get_image_info(ID=img_dict["id"])
+        img_path = oa.get_image_info(ID=img_dict["id"], url_mode=url_mode)
         img_paths.append(img_path)
     return img_paths

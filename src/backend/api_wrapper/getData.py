@@ -88,9 +88,9 @@ class timetable_info(api_interface):
             "X-Conversation-ID": str(self.conv_id)
         }
         self.r = requests.get(url=self.adress+'/locations', headers=auth, params=query)
-        #print(self.r.url)
-        #print(self.r.status_code)
-        #print(self.r.text)
+        print(self.r.url)
+        print(self.r.status_code)
+        print(self.r.text)
         return json.loads(self.r.text)
 
     def get_tripRequest(self, trip:OrderedDict=generate_trip_dict())->dict:
@@ -369,7 +369,7 @@ class journey_service(api_interface):
 class outdoor_active(api_interface):
     img_adress = "http://img.oastatic.com/img/"
     img_format = [650,300]
-    img_tmpDir = os.path.abspath(os.path.dirname(__file__)+"/../data/tmp")
+    img_tmpDir = os.path.abspath(os.path.dirname(__file__)+"/../../dash/assets")
 
     def get_swiss_route_IDs(self, coords = get_coords_request(lat=46.79803, lon=8.23656), radius = 50000):
         jsonhead={'Accept':'application/json'}
@@ -385,14 +385,17 @@ class outdoor_active(api_interface):
         r = requests.get('http://www.outdooractive.com/api/project/api-dev-oa/oois/'+s_ids[:-1]+'?key=yourtest-outdoora-ctiveapi',headers=jsonhead)
         return json.loads(r.text)["tour"]
 
-    def get_image_info(self, ID=6128163, force:bool=False)->str:
+    def get_image_info(self, ID=6128163, force:bool=False, url_mode=False)->str:
         if(not os.path.exists(self.img_tmpDir)):    #hack for notebooks
             self.img_tmpDir = "./tmp"
             os.mkdir(self.img_tmpDir)
         else:
-            print("found: ", self.img_tmpDir)
+            pass
+            #print("found: ", self.img_tmpDir)
 
         png_path = self.img_tmpDir+"/"+str(ID)+".png"
+        if(url_mode):
+            return self.img_adress+"/"+str(self.img_format[0])+"/"+str(self.img_format[1])+"/"+str(ID)+"/.jpg"
         if(not os.path.exists(png_path) or force):
             r = requests.get(url=self.img_adress+"/"+str(self.img_format[0])+"/"+str(self.img_format[1])+"/"+str(ID)+"/.jpg", stream=True)
             r.raw.decode_content = True

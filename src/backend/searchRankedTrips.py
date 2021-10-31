@@ -27,7 +27,7 @@ def get_switzerland_rankings()->pd.DataFrame:
     return swiss_df
 
 
-def rank_trips(startLocation, starting_time, destination, destination_radius, verbose=False)->pd.DataFrame:
+def get_trips_ranking(startLocation, starting_time, destination, destination_radius, verbose=False)->pd.DataFrame:
     """
     Generate convenient hike trips close to the destination. Gets slow for large Search areas!
 
@@ -223,6 +223,6 @@ if __name__ == "__main__":
     #destination = "Zug"
     destination_radius = 5000
     print("START")
-    df = rank_trips(startLocation=startLocation, starting_time=starting_time, destination=destination, destination_radius=destination_radius, verbose=True)
+    df = get_trips_ranking(startLocation=startLocation, starting_time=starting_time, destination=destination, destination_radius=destination_radius, verbose=True)
     print(df)
     print("DONE")
