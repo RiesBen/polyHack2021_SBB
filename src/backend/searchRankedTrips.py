@@ -12,7 +12,6 @@ js = getData.journey_service()
 timetable = getData.timetable_info()
 weather = getData.weather_forcast()
 
-backend_storage = storage.backend_storage()
 
 class backend_storage():
     selected_trip:pd.DataFrame = None
