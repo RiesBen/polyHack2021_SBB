@@ -34,6 +34,7 @@ def generate_table_pics(dataframe, max_rows=3):
 
 
 def generate_table(dataframe, max_rows=10):
+
     return html.Table(
         # Header
         [html.Tr([html.Th(col) for col in dataframe.columns])] +
@@ -60,7 +61,7 @@ def get_trips_df(n_clicks, start_date, start_loc, dest_loc, dest_rad, start_time
                 if(len(d)>=limit_output):
                     break
                 else:
-                    if(not isinstance(row['images'], float)):
+                    if("images" in row and not isinstance(row['images'], float)):
                         d.update({row.title: [get_pictures(row, url_mode=True, limit_pics=1, format=format)[0],
                                  row['startingPointDescr']]})
         return pd.DataFrame(d)
@@ -85,10 +86,11 @@ def get_trips_df(n_clicks, start_date, start_loc, dest_loc, dest_rad, start_time
 
         if (ranked_data.shape[0] > offset):
             for i, row in list(ranked_data.iterrows())[offset:]:
+                print(row)
                 if (len(d) >= limit_output):
                     break
                 else:
-                    if (not isinstance(row['images'], float)):
+                    if ("images" in row and not isinstance(row['images'], float)):
                         d.update({row.title: [get_pictures(row, url_mode=True, limit_pics=1, format=format)[0],
                                               row['startingPointDescr']]})
         df = pd.DataFrame(data=d)
@@ -137,6 +139,8 @@ def get_activity_df():
     print(selected_trip)
     if(selected_trip is not None):
         duration = str(datetime.timedelta(minutes=selected_trip['time']['min']))
+        title = selected_trip['title']
+
         startDesc = selected_trip['startingPointDescr']
         difficulty = selected_trip['rating']['difficulty']
         ascent = selected_trip['elevation']['ascent']
@@ -144,7 +148,7 @@ def get_activity_df():
         length = selected_trip['length']/1000
 
         #print(storage.selected_trip)
-        hike_dict = {'duration': [duration], 'startDesc': [startDesc],  'length': [length], 'descent':[descent], 'ascent':[ascent], "difficutly":[difficulty]}
+        hike_dict = {"title":title, 'duration': [duration], 'startDesc': [startDesc],  'length': [length], 'descent':[descent], 'ascent':[ascent], "difficutly":[difficulty]}
         hike_data = pd.DataFrame(data=hike_dict)
     else:
         hike_data = pd.DataFrame({})
