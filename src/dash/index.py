@@ -1,3 +1,5 @@
+import builtins
+import json
 import dash
 from dash.dependencies import Input, Output, State
 from dash import html
@@ -39,8 +41,10 @@ app.layout = html.Div([
                             placeholder="HH:MM",
                         ),
                         html.Button(children='Submit', id='submit-val', n_clicks=0),
+                        #dcc.Store(id='ranked_data'),
                         html.Div([
-                            html.Div([])
+                            html.Div([]),
+                            #dcc.Store(id='selected_trip')
                         ], id='trips')
                     ], style={'width': '50%', 'verticalAlign': 'top'}),
                     html.Td([
@@ -87,50 +91,50 @@ def update_output(n_clicks, start_date, start_loc, dest_loc, dest_rad, start_tim
     new_df = get_trips_df(n_clicks, start_date, start_loc, dest_loc, dest_rad,  start_time)
     return generate_table_pics(new_df)
 
-"""
-update map & routes once trip selected
-"""
-'''
-@app.callback(
-    Output('map', 'children'),
-    Input('trip_0', 'n_clicks')
-)
-def update_map_0(n_clicks):
-    if n_clicks > 0:
-        update_map(0)
 
-@app.callback(
-    Output('map', 'children'),
-    Input('trip_1', 'n_clicks')
+@app.callback(Output('map', 'children'), 
+    Input("submit-val", 'n_clicks'),
+    Input("start_date", "date"),
+    State("start_loc", "value"),
+    State("dest_loc", "value"),
+    State("dest_rad", "value"),
+    State("start_time", "value")
 )
-def update_map_1(n_clicks):
-    if n_clicks > 0:
-        update_map(1)
+def store_data(n_clicks, start_date, start_loc, dest_loc, dest_rad, start_time):
+     # some expensive data processing step
+     new_df = get_trips_df(n_clicks, start_date, start_loc, dest_loc, dest_rad,  start_time)
 
-@app.callback(
-    Output('map', 'children'),
-    Input('trip_2', 'n_clicks')
-)
-def update_map_2(n_clicks):
-    if n_clicks > 0:
-        update_map(2)
+     # more generally, this line would be
+     # json.dumps(cleaned_df)
+     return new_df.to_json(date_format='iso', orient='split')
 
-@app.callback(
-    Output('map', 'children'),
-    Input('trip_3', 'n_clicks')
-)
-def update_map_3(n_clicks):
-    if n_clicks > 0:
-        update_map(3)
 
-@app.callback(
-    Output('map', 'children'),
-    Input('trip_4', 'n_clicks')
-)
-def update_map_4(n_clicks):
-    if n_clicks > 0:
-        update_map(4)
-'''
+# """
+# update map & routes once trip selected
+# """
+# @app.callback(
+#     Output('selected_trip', 'data'),
+#     Input('trip_0', 'n_clicks'),
+#     Input('trip_1', 'n_clicks'),
+#     Input('trip_2', 'n_clicks'),
+#     Input('trip_3', 'n_clicks'),
+# )
+# def update_map_0(btn1, btn2, btn3, btn4):
+
+#     ctx = dash.callback_context
+
+#     if not ctx.triggered:
+#         button_id = None
+#     else:
+#         button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+#     dummy_dict = {'id': button_id}
+#     dummy_json = json.dumps(dummy_dict)
+#     return dummy_json
+
+
+
+
 
 
 if __name__ == '__main__':
