@@ -2,7 +2,6 @@ import dash
 from dash import html
 import datetime
 import pandas as pd
-from index import setup_callbacks
 import plotly.express as px
 px.set_mapbox_access_token(open(".mapbox_token").read())
 
@@ -20,6 +19,8 @@ def render_button(content, id):
 """
 """
 def generate_table_pics(dataframe, max_rows=3):
+    from index import setup_callbacks
+
     num = len(dataframe.columns)
     setup_callbacks(num)
     return html.Table(
