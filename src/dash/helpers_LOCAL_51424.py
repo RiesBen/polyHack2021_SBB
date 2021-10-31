@@ -1,11 +1,7 @@
 import dash
 from dash import html
-<<<<<<< Updated upstream
 import datetime
-=======
->>>>>>> Stashed changes
 import pandas as pd
-from index import setup_callbacks
 import plotly.express as px
 px.set_mapbox_access_token(open(".mapbox_token").read())
 
@@ -16,18 +12,12 @@ def render_cell(content, is_image):
         return content
 
 
-
-def render_button(content, id):
-    return html.Button(children=content, id=id, n_clicks=0)
-
 """
 """
 def generate_table_pics(dataframe, max_rows=3):
-    num = len(dataframe.columns)
-    setup_callbacks(num)
     return html.Table(
         # Header
-        [html.Tr([html.Th(render_button(col, 'trip_' + str(colnum))) for colnum,col in enumerate(dataframe.columns)])] +
+        [html.Tr([html.Th(col) for col in dataframe.columns])] +
 
         # Body
         [html.Tr([
