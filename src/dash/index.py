@@ -71,7 +71,9 @@ app.layout = html.Div([
 ])
 
 
-
+"""
+update trips once input submitten
+"""
 @app.callback(
     Output("trips", "children"),
     Input("submit-val", 'n_clicks'),
@@ -86,5 +88,25 @@ def update_output(n_clicks, start_date, start_loc, dest_loc, dest_rad, start_tim
     return generate_table_pics(new_df)
 
 
+"""
+update map & routes once trip selected
+"""
+def setup_callbacks(num):
+    inputs = []
+    for n in range(num):
+        inputs.append(Input('trip_' + str(n), 'n_clicks'))
+
+    @app.callback(
+        [
+            Output('map', 'children'),
+        ],
+        inputs
+    )
+    def update_map(*args):
+        return html.Div('bla')
+
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
+

@@ -53,14 +53,12 @@ Call backend API to get relevant trips to pd.DataFrame
 Here we make mock df just to show that things are being updated
 """
 def get_trips_df(n_clicks, start_date, start_loc, dest_loc, dest_rad, start_time, limit_output=4):
-    print(start_date, start_time, start_loc, dest_loc, dest_rad)
-
+    print(start_date, start_time, start_loc, dest_loc)
     if n_clicks == 0:
         from src.backend.searchRankedTrips import get_switzerland_rankings
         from src.backend.utils import get_pictures
-        from src.dash.storage import ranked_data
-        ranked_data = get_switzerland_rankings()
-        d = {row.title:[get_pictures(row, url_mode=True, limit_pics=1, format=[128,96])[0], row['startingPointDescr']] for i, row in list(ranked_data.iterrows())[:limit_output] if(not isinstance(row['images'], float))}
+        bdf = get_switzerland_rankings()
+        d = {row.title:[get_pictures(row, url_mode=True, limit_pics=1, format=[128,96])[0], row['startingPointDescr']] for i, row in list(bdf.iterrows())[:limit_output] if(not isinstance(row['images'], float))}
         return pd.DataFrame(d)
 
     elif(start_loc is not None and dest_loc is not None):
@@ -72,14 +70,14 @@ def get_trips_df(n_clicks, start_date, start_loc, dest_loc, dest_rad, start_time
             start_date = datetime.date()
         else:
             start_date = datetime.date.fromisoformat(start_date)
-        if (dest_rad is not None):
-            dest_rad = 5
+
 
         start_datetime = datetime.datetime.combine(start_date, start_time)
         from src.backend.searchRankedTrips import get_trips_ranking
         from src.backend.utils import get_pictures
-        ranked_data = get_trips_ranking(startLocation=start_loc, starting_time=start_datetime, destination=dest_loc, destination_radius=dest_rad*1000)
-        d = {row.title:[get_pictures(row, url_mode=True, limit_pics=1, format=[128,96])[0], row['startingPointDescr'] ] for i, row in list(ranked_data.iterrows())[:limit_output] if(not isinstance(row['images'], float))}
+        df = get_trips_ranking(startLocation=start_loc, starting_time=start_datetime, destination=dest_loc, destination_radius=dest_rad*1000)
+        print(df)
+        d = {row.title:[get_pictures(row, url_mode=True, limit_pics=1, format=[128,96])[0], row['startingPointDescr'] ] for i, row in list(df.iterrows())[:limit_output] if(not isinstance(row['images'], float))}
         df = pd.DataFrame(data=d)
         return df
     else:
