@@ -5,18 +5,21 @@ This small app is a concept for an conveniet travel Idea with SBB.
 All travel destinations are ranked by the traviling distance, the user rating, the last mile distance and the number of changes on the tracks.
 With this ranking, the easy reachable destinations are suggested to the customer, allowing comfortable planning of outdoor activities.
 
-###Exploration Phase:
+### Exploration Phase:
+
 ![](.img/exploration.png)
 
 The exploration tab offers the customer a nice overview over conveniently reachable destinations.
 Subselections of regions in Switzerland and time scheduling are features, that makes exploring switzerland easy.
 
 
-###Planning Phase:
+### Planning Phase:
+
 ![](.img/planning.png)
 
 The planning tab is visualizing information about the outdoor activity and the public transport connections.
 This can easily be enhanced with the already present weather information and Points of interest.
+(Todos: buy tickets button, integrate mapAPI)
 
 ### Having Fun!
 
@@ -31,6 +34,7 @@ Requirements: python3, Anaconda
     conda env create -f condaEnv.yml
 
 ### Running the app
+
 the App can be easily started, after installing our provided Anaconda environment.
 
     cd src/dash
