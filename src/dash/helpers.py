@@ -85,19 +85,21 @@ get nicely formatted train arrival df
 """
 def get_arrival_df():
     # mock data 2B replaced
+    #departure = [datetime.datetime.fromisoformat(trip['segments'][0]["stops"][0]["departureDateTime"]).strftime('%H:%M') for trip in selected_trip['tripsToDestination']]
+    #arrival = [datetime.datetime.fromisoformat(trip['segments'][-1]["stops"][-1]["arrivalDateTime"]).strftime('%H:%M') for trip in selected_trip['tripsToDestination']]
 
+    #track = [trip['segments'][0]["stops"][0]["departureTrack"] for trip in selected_trip['tripsToDestination']]
+    #name_from = [trip['segments'][0]["stops"][0]["name"] for trip in selected_trip['tripsToDestination']]
+    #name_to = [datetime.datetime.fromisoformat(trip['segments'][-1]["stops"][-1]["name"]).strftime('%H:%M') for trip in selected_trip['tripsToDestination']]
 
-    departure = [datetime.datetime.fromisoformat(trip['segments'][0]["stops"][0]["departureDateTime"]).strftime('%H:%M') for trip in selected_trip['tripsToDestination']]
-    arrival = [datetime.datetime.fromisoformat(trip['segments'][-1]["stops"][-1]["arrivalDateTime"]).strftime('%H:%M') for trip in selected_trip['tripsToDestination']]
-
-    track = [trip['segments'][0]["stops"][0]["departureTrack"] for trip in selected_trip['tripsToDestination']]
-    name_from = [trip['segments'][0]["stops"][0]["name"] for trip in selected_trip['tripsToDestination']]
-    name_to = [datetime.datetime.fromisoformat(trip['segments'][-1]["stops"][-1]["name"]).strftime('%H:%M') for trip in selected_trip['tripsToDestination']]
-
-    train_dict = {'departure': departure, 'arrival': arrival, \
-        'from': name_from, 'to': name_to,         'track': track} #'line': ['IC 14', 'R 5', 'T6'], \
+    #train_dict = {'departure': departure, 'arrival': arrival, \
+    #    'from': name_from, 'to': name_to, 'track': track} #'line': ['IC 14', 'R 5', 'T6'], \
+    train_dict = {'departure': ['14.00', '14.34', '15.20'], 'arrival': ['14:29', '15:11', '15.55'], \
+        'from': ['HB', 'Bern', 'Basel'], 'to': ['Bern', 'Basel', 'Allschwil'], 'line': ['IC 14', 'R 5', 'T6'], \
+            'track': ['1', '2', '-']}
     train_data = pd.DataFrame(data=train_dict)
     return train_data
+
 
 """
 same for return trip
@@ -110,7 +112,8 @@ def get_return_df():
 get trip data
 """
 def get_activity_df():
-    hike_dict = {'departure': ['16.00', '16.30'], 'arrival': ['16.30', '17.30'], 'POI': ['some location', 'some other location']}
+    #duration = datetime.timedelta(minutes=selected_trip['time']['min'])
+    hike_dict = {'departure': ['16.00', '16.30'], 'arrival': ['16.30', '17.30'],  'POI': ['some location', 'some other location']}
     hike_data = pd.DataFrame(data=hike_dict)
     return hike_data
 

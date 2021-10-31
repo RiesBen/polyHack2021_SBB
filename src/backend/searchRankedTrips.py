@@ -63,59 +63,6 @@ def get_trips_ranking(startLocation, starting_time, destination, destination_rad
 """
     Private Functions, don't look! ;)
 """
-def _dist2DDeg_KM(x, y):
-    """
-        Approx distance
-    """
-    dLon =x["lon"]-y["latitude"]
-    dLat =x["lat"]-y["longitude"]
-    return dLat*111.32+(40075*np.cos(dLat)/360) *dLon
-
-
-# Travel Time and changes
-def _get_nextStation_trip(destinationStation_ID, startLocation_ID, starting_time):
-    trip_request = getData.generate_trip_dict(originId=startLocation_ID,
-                                              destinationId=destinationStation_ID,
-                                              date=starting_time.date(),
-                                              time=starting_time.time())
-    print(trip_request)
-    trips = timetable.get_tripRequest(trip_request)
-    if (len(trips) == 0):
-        return np.nan
-    else:
-        t_deltas = []
-        segments = []
-        for trip in trips:
-            start_time = datetime.datetime.fromisoformat(trip['segments'][0]['stops'][0]['departureDateTime'])
-            end_time = datetime.datetime.fromisoformat(trip['segments'][-1]['stops'][-1]["arrivalDateTime"])
-            deltaT = end_time - start_time
-            trip.update({"t": deltaT, "nSegments": len(trip['segments'])})
-            segments.append(len(trip['segments']))
-            t_deltas.append(deltaT.seconds)
-
-        t_deltas = np.array(t_deltas)
-        segments = np.array(segments)
-
-        fastest_trip_i = np.argmin(t_deltas)
-        fastest_trip = trips[np.argmin(t_deltas)]
-        fastest_trip_t = np.min(t_deltas)
-        fastest_trip.update({"t": fastest_trip_t, "nSegments": segments[fastest_trip_i]})
-        return fastest_trip
-
-def _get_fastest_trip(trips):
-    if (len(trips) == 0 or trips is float):
-        return np.nan
-    else:
-        t_deltas = []
-        segments = []
-        for trip in trips:
-            segments.appen(trip['nSegments'])
-            t_deltas.append(trip['t'])
-
-        fastest_trip_i = np.argmin(t_deltas)
-        fastest_trip = trips[np.argmin(t_deltas)]
-        return fastest_trip
-
 def _get_information(destination, destination_radius, startLocation, starting_time, verbose=False):
     # Get starting Info
     if verbose: print("Get Starting Information")
@@ -142,20 +89,76 @@ def _get_information(destination, destination_radius, startLocation, starting_ti
     return oa_df
 
 
-def _get_trip_info(oa_df, starting_time, startLocation_ID):
-    oa_df["tripsToDestination"] = oa_df.apply(
-        lambda x: _get_nextStation_trip(x["nextStation"]['uicOrId'], startLocation_ID=startLocation_ID,
-                                       starting_time=starting_time), axis=1)
-    oa_df["fastestTripToDestination"] = oa_df.apply(lambda x: _get_fastest_trip(x["tripsToDestination"]),
-                                                              axis=1)
+def _dist2DDeg_KM(x, y):
+    """
+        Approx distance
+    """
+    dLon =x["lon"]-y["latitude"]
+    dLat =x["lat"]-y["longitude"]
+    return dLat*111.32+(40075*np.cos(dLat)/360) *dLon
 
+
+# Travel Time and changes
+def _get_nextStation_trip(destinationStation_ID, startLocation_ID, starting_time):
+    try:
+        trip_request = getData.generate_trip_dict(originId=startLocation_ID,
+                                                  destinationId=destinationStation_ID,
+                                                  date=starting_time.date(),
+                                                  time=starting_time.time())
+        # print(trip_request)
+        trips = timetable.get_tripRequest(trip_request)
+        if (len(trips) == 0):
+            return np.nan
+        else:
+            t_deltas = []
+            segments = []
+            for trip in trips:
+                start_time = datetime.datetime.fromisoformat(trip['segments'][0]['stops'][0]['departureDateTime'])
+                end_time = datetime.datetime.fromisoformat(trip['segments'][-1]['stops'][-1]["arrivalDateTime"])
+                deltaT = end_time - start_time
+                trip.update({"t": deltaT, "nSegments": len(trip['segments'])})
+                segments.append(len(trip['segments']))
+                t_deltas.append(deltaT.seconds)
+    except:
+        trips=np.nan
+    return trips
+
+
+def _get_fastest_trip(trips):
+    if (isinstance(trips, float) or (isinstance(trips, list) and len(trips) == 0)):
+        return np.nan
+    else:
+        t_deltas = []
+        segments = []
+        for trip in trips:
+            print(trip)
+            segments.append(trip['nSegments'])
+            t_deltas.append(trip['t'])
+
+        fastest_trip_i = np.argmin(t_deltas)
+        fastest_trip = trips[np.argmin(t_deltas)]
+        return fastest_trip
+
+
+def _get_trip_info(oa_df, starting_time, startLocation_ID):
+    all_trips = []
+    for i, row in oa_df.iterrows():
+        ts = _get_nextStation_trip(row["nextStation"]['uicOrId'], startLocation_ID=startLocation_ID,
+                                  starting_time=starting_time)
+        all_trips.append(ts)
+
+    oa_df["tripsToDestination"] = pd.Series(all_trips)
+
+    #oa_df["tripsToDestination"] = oa_df.apply(
+    #    lambda x: _get_nextStation_trip(x["nextStation"]['uicOrId'], startLocation_ID=startLocation_ID,
+    #                                   starting_time=starting_time), axis=1)
+    oa_df["fastestTripToDestination"] = oa_df.apply(lambda x: _get_fastest_trip(x["tripsToDestination"]), axis=1)
     oa_df["tripsToHome"] = oa_df.apply(lambda x: _get_nextStation_trip(startLocation_ID=startLocation_ID,
                                                                                 destinationStation_ID=x["nextStation"][
                                                                                     'uicOrId'],
                                                                                 starting_time=starting_time + datetime.timedelta(
                                                                                     minutes=x["time"]["min"])), axis=1)
     oa_df["fastestTripHome"] = oa_df.apply(lambda x: _get_fastest_trip(x["tripsToHome"]), axis=1)
-
 
     oa_df.dropna(subset=["fastestTripToDestination", "fastestTripHome"], inplace=True)
 
