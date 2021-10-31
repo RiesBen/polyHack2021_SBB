@@ -3,8 +3,6 @@ import numpy as np
 import pandas as pd
 import datetime
 
-
-
 #implemented
 from src.backend.api_wrapper import getData
 #init_api

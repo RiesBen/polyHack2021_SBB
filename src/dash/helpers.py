@@ -43,6 +43,9 @@ Here we make mock df just to show that things are being updated
 """
 def get_trips_df(n_clicks, start_date, start_loc, dest_loc, start_time):
     if n_clicks == 0:
+        from src.backend.searchRankedTrips import get_switzerland_rankings
+        bdf = get_switzerland_rankings()
+
         return pd.DataFrame()
     else:
         picsum = 'https://picsum.photos/200/150'
