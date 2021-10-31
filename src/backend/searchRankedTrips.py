@@ -5,7 +5,6 @@ import datetime
 
 #implemented
 from src.backend.api_wrapper import getData
-from src.backend import storage
 
 #init_api
 oa = getData.outdoor_active()
