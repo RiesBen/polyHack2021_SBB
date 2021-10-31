@@ -20,7 +20,6 @@ def render_button(content, id):
 """
 def generate_table_pics(dataframe, max_rows=3):
     from index import setup_callbacks
-
     num = len(dataframe.columns)
     setup_callbacks(num)
     return html.Table(
