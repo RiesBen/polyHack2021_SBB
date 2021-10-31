@@ -36,7 +36,6 @@ def get_pictures(destination:pd.Series, primaryPicture:bool=False, limit_pics=5,
     if(primaryPicture):
         possible_img = [destination['primaryImage']]
     else:
-        #print(destination['images'])
         possible_img = destination['images']["image"]
     img_paths = []
     if(len(possible_img)< limit_pics):

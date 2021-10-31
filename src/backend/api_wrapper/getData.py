@@ -371,7 +371,7 @@ class journey_service(api_interface):
 
 
 class outdoor_active(api_interface):
-    img_adress = "http://img.oastatic.com/img/"
+    img_adress = "http://img.oastatic.com/img"
     img_format = [650,300]
     img_tmpDir = os.path.abspath(os.path.dirname(__file__)+"/../../dash/assets")
 
@@ -399,6 +399,7 @@ class outdoor_active(api_interface):
 
         png_path = self.img_tmpDir+"/"+str(ID)+".png"
         if(url_mode):
+            #print(self.img_adress+"/"+str(self.img_format[0])+"/"+str(self.img_format[1])+"/"+str(ID)+"/.jpg")
             return self.img_adress+"/"+str(self.img_format[0])+"/"+str(self.img_format[1])+"/"+str(ID)+"/.jpg"
         if(not os.path.exists(png_path) or force):
             r = requests.get(url=self.img_adress+"/"+str(self.img_format[0])+"/"+str(self.img_format[1])+"/"+str(ID)+"/.jpg", stream=True)

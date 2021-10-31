@@ -15,6 +15,7 @@ weather = getData.weather_forcast()
 
 class backend_storage():
     selected_trip:pd.DataFrame = None
+    ranked_data: pd.DataFrame = None
 
     def __init__(self):
         self.selected_trip = None
@@ -22,12 +23,12 @@ class backend_storage():
         pass
 
     def get_selected_trip(self):
-        if(self.ranked_data == None):
+        if(self.selected_trip is None):
             self.get_switzerland_rankings()
         return self.selected_trip
 
     def get_ranked_data(self):
-        if(self.ranked_data == None):
+        if(self.ranked_data is None):
             self.get_switzerland_rankings()
         return self.ranked_data
 
@@ -43,7 +44,7 @@ class backend_storage():
             swiss_df = pd.read_pickle(siwss_df_path)
             swiss_df = _calculate_ranking(swiss_df)
             self.selected_trip = swiss_df.iloc[0]
-            print("HIKE", self.selected_trip)
+            # print("HIKE", self.selected_trip)
 
         else:
             raise IOError("could not find swiss df!")
@@ -71,7 +72,8 @@ class backend_storage():
 
         ## Feature extract
         if verbose: print("Get Features")
-        print(oa_df.columns)
+        #print(oa_df.columns)
+        print(oa_df.shape)
         fastest_trip_time = pd.Series([float(x['t'].seconds)/60 for x in oa_df["fastestTripToDestination"]])
         nsegments_trip = pd.Series([float(x['nSegments']) for x in oa_df["fastestTripToDestination"]])
         last_mileDist = pd.Series([float(x['distanceToOA']) for x in oa_df["nextStation"]])
