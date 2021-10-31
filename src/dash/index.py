@@ -8,7 +8,7 @@ px.set_mapbox_access_token(open(".mapbox_token").read())
 import pandas as pd
 from datetime import date
 
-from helpers import generate_table, generate_table_pics, get_activity_df, get_arrival_df, get_return_df, get_trips_df, render_map
+from helpers import generate_table, generate_table_pics, get_activity_df, get_arrival_df, get_return_df, get_trips_df, render_map, update_map
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -87,23 +87,48 @@ def update_output(n_clicks, start_date, start_loc, dest_loc, dest_rad, start_tim
     new_df = get_trips_df(n_clicks, start_date, start_loc, dest_loc, dest_rad,  start_time)
     return generate_table_pics(new_df)
 
-
 """
 update map & routes once trip selected
 """
-def setup_callbacks(num):
-    inputs = []
-    for n in range(num):
-        inputs.append(Input('trip_' + str(n), 'n_clicks'))
+@app.callback(
+    Output('map', 'children'),
+    Input('trip_0', 'n_clicks')
+)
+def update_map_0(n_clicks):
+    if n_clicks > 0:
+        update_map(0)
 
-    @app.callback(
-        [
-            Output('map', 'children'),
-        ],
-        inputs
-    )
-    def update_map(*args):
-        return html.Div('bla')
+@app.callback(
+    Output('map', 'children'),
+    Input('trip_1', 'n_clicks')
+)
+def update_map_1(n_clicks):
+    if n_clicks > 0:
+        update_map(1)
+
+@app.callback(
+    Output('map', 'children'),
+    Input('trip_2', 'n_clicks')
+)
+def update_map_2(n_clicks):
+    if n_clicks > 0:
+        update_map(2)
+
+@app.callback(
+    Output('map', 'children'),
+    Input('trip_3', 'n_clicks')
+)
+def update_map_3(n_clicks):
+    if n_clicks > 0:
+        update_map(3)
+
+@app.callback(
+    Output('map', 'children'),
+    Input('trip_4', 'n_clicks')
+)
+def update_map_4(n_clicks):
+    if n_clicks > 0:
+        update_map(4)
 
 
 
