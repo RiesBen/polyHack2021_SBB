@@ -3,6 +3,7 @@ from dash import html
 import datetime
 import pandas as pd
 import plotly.express as px
+from src.dash.storage import ranked_data, selected_trip
 px.set_mapbox_access_token(open(".mapbox_token").read())
 
 def render_cell(content, is_image):
@@ -25,13 +26,11 @@ def generate_table_pics(dataframe, max_rows=3):
     return html.Table(
         # Header
         [html.Tr([html.Th(render_button(col, 'trip_' + str(colnum))) for colnum,col in enumerate(dataframe.columns)])] +
-
         # Body
         [html.Tr([
             html.Td(render_cell(dataframe.iloc[i][col], i==0)) for col in dataframe.columns
         ]) for i in range(min(len(dataframe), max_rows))]
 , style={'float': 'left','margin': 'auto', 'width': '50%'})
-
 
 
 def generate_table(dataframe, max_rows=10):
@@ -49,13 +48,12 @@ def generate_table(dataframe, max_rows=10):
 Call backend API to get relevant trips to pd.DataFrame
 Here we make mock df just to show that things are being updated
 """
-def get_trips_df(n_clicks, start_date, start_loc, dest_loc, dest_rad, start_time, limit_output=4):
+def get_trips_df(n_clicks, start_date, start_loc, dest_loc, dest_rad, start_time, limit_output=5):
     print(start_date, start_time, start_loc, dest_loc, dest_rad)
 
     if n_clicks == 0:
         from src.backend.searchRankedTrips import get_switzerland_rankings
         from src.backend.utils import get_pictures
-        from src.dash.storage import ranked_data
         ranked_data = get_switzerland_rankings()
         d = {row.title:[get_pictures(row, url_mode=True, limit_pics=1, format=[128,96])[0], row['startingPointDescr']] for i, row in list(ranked_data.iterrows())[:limit_output] if(not isinstance(row['images'], float))}
         return pd.DataFrame(d)
@@ -87,9 +85,17 @@ get nicely formatted train arrival df
 """
 def get_arrival_df():
     # mock data 2B replaced
-    train_dict = {'departure': ['14.00', '14.34', '15.20'], 'arrival': ['14:29', '15:11', '15.55'], \
-        'from': ['HB', 'Bern', 'Basel'], 'to': ['Bern', 'Basel', 'Allschwil'], 'line': ['IC 14', 'R 5', 'T6'], \
-            'track': ['1', '2', '-']}
+
+
+    departure = [datetime.datetime.fromisoformat(trip['segments'][0]["stops"][0]["departureDateTime"]).strftime('%H:%M') for trip in selected_trip['tripsToDestination']]
+    arrival = [datetime.datetime.fromisoformat(trip['segments'][-1]["stops"][-1]["arrivalDateTime"]).strftime('%H:%M') for trip in selected_trip['tripsToDestination']]
+
+    track = [trip['segments'][0]["stops"][0]["departureTrack"] for trip in selected_trip['tripsToDestination']]
+    name_from = [trip['segments'][0]["stops"][0]["name"] for trip in selected_trip['tripsToDestination']]
+    name_to = [datetime.datetime.fromisoformat(trip['segments'][-1]["stops"][-1]["name"]).strftime('%H:%M') for trip in selected_trip['tripsToDestination']]
+
+    train_dict = {'departure': departure, 'arrival': arrival, \
+        'from': name_from, 'to': name_to,         'track': track} #'line': ['IC 14', 'R 5', 'T6'], \
     train_data = pd.DataFrame(data=train_dict)
     return train_data
 

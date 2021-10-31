@@ -1,4 +1,4 @@
-name: polyHack2021_SBB
+name: polyHack2021_SBB2
 channels:
   - conda-forge
   - defaults
@@ -8,8 +8,6 @@ dependencies:
   - numba
   - numpy
   - pandas
-  - qt
   - scipy
   - requests
   - dash
-  - dash_html_components
