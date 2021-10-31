@@ -1,9 +1,6 @@
 import dash
 from dash import html
-<<<<<<< Updated upstream
 import datetime
-=======
->>>>>>> Stashed changes
 import pandas as pd
 from index import setup_callbacks
 import plotly.express as px
