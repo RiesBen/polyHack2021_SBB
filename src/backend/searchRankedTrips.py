@@ -7,15 +7,7 @@ import datetime
 
 #implemented
 from src.backend.api_wrapper import getData
-#helper
-def dist2DDeg_KM(x,y):
-    """
-        Approx distance
-    """
-    dLon =x["lon"]-y["latitude"]
-    dLat =x["lat"]-y["longitude"]
-    return dLat*111.32+(40075*np.cos(dLat)/360) *dLon
-
+#init_api
 oa = getData.outdoor_active()
 js = getData.journey_service()
 timetable = getData.timetable_info()
@@ -70,19 +62,16 @@ def rank_trips(startLocation, starting_time, destination, destination_radius, ve
     return oa_df
 
 
-def get_weather_info(destination:pd.Series, starting_time )->dict:
+"""
+    Private Functions, don't look! ;)
+"""
+def _dist2DDeg_KM(x, y):
     """
-        enter row of hike locations, get weather info back.
-
-    :param destination: pd.Series
-    :param starting_time: datetime
-    :return:
-        dict
-            with weather info.
+        Approx distance
     """
-    weather_request = getData.get_weather_request(time=starting_time+datetime.timedelta(minutes=destination['feat_tripTime']),
-                                                  location=[destination["startingPoint"]["lon"], destination["startingPoint"]["lat"]])
-    return weather.get_weather(weather_request)
+    dLon =x["lon"]-y["latitude"]
+    dLat =x["lat"]-y["longitude"]
+    return dLat*111.32+(40075*np.cos(dLat)/360) *dLon
 
 
 def _get_information(destination, destination_radius, startLocation, starting_time, verbose=False):
@@ -160,7 +149,7 @@ def _get_station_info(oa_df):
         if (isinstance(row['closeStations'], list)):
             stations = row['closeStations']
             print(type(stations), stations)
-            close_stations_distances = [dist2DDeg_KM(row['startingPoint'], station['coordinatesWGS84']) / 1000 for
+            close_stations_distances = [_dist2DDeg_KM(row['startingPoint'], station['coordinatesWGS84']) / 1000 for
                                         station in stations]
             closest_station_i = np.argmin(close_stations_distances)
             closest_station_dmin = np.min(close_stations_distances)
@@ -195,6 +184,7 @@ def _get_oa_info(destination_OBJ, destination_radius):
     drop_empty_stations = [i for i, row in oa_df.iterrows() if (len(row['closeStations']) == 0)]
     oa_df = oa_df.drop(index=drop_empty_stations)
     return oa_df
+
 
 def _calculate_ranking(oa_df)->pd.DataFrame:
     counts, axes = np.histogram(oa_df["feat_tripTime"].dropna(),

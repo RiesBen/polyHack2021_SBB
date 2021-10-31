@@ -1,6 +1,7 @@
 import json, os
 import requests
 import uuid
+import shutil
 from datetime import date, datetime, time
 from src.backend.api_wrapper.data import s_key, m_key, t_key, w_key, j_key
 from collections import OrderedDict
@@ -366,7 +367,10 @@ class journey_service(api_interface):
 
 
 class outdoor_active(api_interface):
-    
+    img_adress = "http://img.oastatic.com/img/"
+    img_format = [650,300]
+    img_tmpDir = os.path.abspath(os.path.dirname(__file__)+"/../data/tmp")
+
     def get_swiss_route_IDs(self, coords = get_coords_request(lat=46.79803, lon=8.23656), radius = 50000):
         jsonhead={'Accept':'application/json'}
         r=requests.get(url='http://www.outdooractive.com/api/project/api-dev-oa/nearby/tour?location='+str(coords["lon"])+','+str(coords["lat"])+'&radius='+str(radius)+'&key=yourtest-outdoora-ctiveapi', headers=jsonhead)
@@ -380,6 +384,26 @@ class outdoor_active(api_interface):
             s_ids+=","
         r = requests.get('http://www.outdooractive.com/api/project/api-dev-oa/oois/'+s_ids[:-1]+'?key=yourtest-outdoora-ctiveapi',headers=jsonhead)
         return json.loads(r.text)["tour"]
+
+    def get_image_info(self, ID=6128163, force:bool=False)->str:
+        if(not os.path.exists(self.img_tmpDir)):    #hack for notebooks
+            self.img_tmpDir = "./tmp"
+            os.mkdir(self.img_tmpDir)
+        else:
+            print("found: ", self.img_tmpDir)
+
+        png_path = self.img_tmpDir+"/"+str(ID)+".png"
+        if(not os.path.exists(png_path) or force):
+            r = requests.get(url=self.img_adress+"/"+str(self.img_format[0])+"/"+str(self.img_format[1])+"/"+str(ID)+"/.jpg", stream=True)
+            r.raw.decode_content = True
+            f = open(png_path, "wb")
+            shutil.copyfileobj(r.raw, f)
+            f.close()
+        else:
+            pass
+
+        return png_path
+
 
     def get_dataframe_of_ch(self,coords = get_coords_request(lat=46.79803, lon=8.23656), radius = 50000):
         ids = self.get_swiss_route_IDs(coords=coords, radius=radius)
@@ -423,10 +447,6 @@ if __name__ == "__main__":
 
     #journey_route
     ## route
-    # Todo: does not work! - A bug on the server side?
-    #https: // journey - maps.api.sbb.ch: 443 / v1 / route?fromStationID = 8503000 & toStationhID = 8507000 & mot = train
-    #500
-    #{"status": 500, "message": "[2006288006] Unexpected error occurred."}
     #jmR = journey_maps_routing()
     #json_dict = jmR.get_route_information(generate_route_dict())
     #print(json_dict)
@@ -445,19 +465,12 @@ if __name__ == "__main__":
 
 
     #weather api
-    wtR= weather_forcast()
-    wtR.get_token()
-    dayTime = datetime.today()
-    json_dict = wtR.get_weather(get_weather_request(time=dayTime))
-
-    #Outdoor activity
-
-
-    #3G-UMTS Coverage
-    #root_node = ET.
+    #wtR= weather_forcast()
+    #wtR.get_token()
+    #dayTime = datetime.today()
+    #json_dict = wtR.get_weather(get_weather_request(time=dayTime))
 
     #Points of Interests – POI-Service.
-
 
     #journey service
     #jrS = journey_service()
