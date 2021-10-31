@@ -1,4 +1,5 @@
 import json, os
+import numpy as np
 import requests
 import uuid
 import shutil
@@ -119,7 +120,10 @@ class timetable_info(api_interface):
         #print(self.r.url)
         #print(self.r.status_code)
         #print(self.r.text)
-        return json.loads(self.r.text)
+        if(self.r.status_code == 500):
+            return np.nan
+        else:
+            return json.loads(self.r.text)
 
 
 class journey_maps_serivce(api_interface):

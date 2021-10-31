@@ -1,10 +1,14 @@
-import dash
+import dash, os
 from dash import html
 import datetime
 import pandas as pd
 import plotly.express as px
-from src.dash.storage import ranked_data, selected_trip
+from src.backend.searchRankedTrips import backend_storage
+
 px.set_mapbox_access_token(open(".mapbox_token").read())
+
+d = dash.Dash()
+backend = backend_storage()
 
 def render_cell(content, is_image):
     if is_image:
@@ -49,9 +53,8 @@ def get_trips_df(n_clicks, start_date, start_loc, dest_loc, dest_rad, start_time
     print(start_date, start_time, start_loc, dest_loc, dest_rad)
 
     if n_clicks == 0:
-        from src.backend.searchRankedTrips import get_switzerland_rankings
         from src.backend.utils import get_pictures
-        ranked_data = get_switzerland_rankings()
+        ranked_data = backend.get_switzerland_rankings()
         d = {row.title:[get_pictures(row, url_mode=True, limit_pics=1, format=[128,96])[0], row['startingPointDescr']] for i, row in list(ranked_data.iterrows())[:limit_output] if(not isinstance(row['images'], float))}
         return pd.DataFrame(d)
 
@@ -68,11 +71,11 @@ def get_trips_df(n_clicks, start_date, start_loc, dest_loc, dest_rad, start_time
             dest_rad = 5
 
         start_datetime = datetime.datetime.combine(start_date, start_time)
-        from src.backend.searchRankedTrips import get_trips_ranking
         from src.backend.utils import get_pictures
-        ranked_data = get_trips_ranking(startLocation=start_loc, starting_time=start_datetime, destination=dest_loc, destination_radius=dest_rad*1000)
+        ranked_data = backend.get_trips_ranking(startLocation=start_loc, starting_time=start_datetime, destination=dest_loc, destination_radius=dest_rad*1000)
         d = {row.title:[get_pictures(row, url_mode=True, limit_pics=1, format=[128,96])[0], row['startingPointDescr'] ] for i, row in list(ranked_data.iterrows())[:limit_output] if(not isinstance(row['images'], float))}
         df = pd.DataFrame(data=d)
+
         return df
     else:
         pass
@@ -109,9 +112,15 @@ def get_return_df():
 get trip data
 """
 def get_activity_df():
-    #duration = datetime.timedelta(minutes=selected_trip['time']['min'])
-    hike_dict = {'departure': ['16.00', '16.30'], 'arrival': ['16.30', '17.30'],  'POI': ['some location', 'some other location']}
-    hike_data = pd.DataFrame(data=hike_dict)
+    selected_trip = backend.get_selected_trip()
+    print(selected_trip)
+    if(selected_trip is not None):
+        duration = datetime.timedelta(minutes=selected_trip['time']['min'])
+        #print(storage.selected_trip)
+        hike_dict = {'departure': ['16.00', '16.30'], 'arrival': ['16.30', '17.30'],  'POI': ['some location', 'some other location']}
+        hike_data = pd.DataFrame(data=hike_dict)
+    else:
+        hike_data = pd.DataFrame({})
     return hike_data
 
 

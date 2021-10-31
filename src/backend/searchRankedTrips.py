@@ -5,59 +5,87 @@ import datetime
 
 #implemented
 from src.backend.api_wrapper import getData
+from src.backend import storage
+
 #init_api
 oa = getData.outdoor_active()
 js = getData.journey_service()
 timetable = getData.timetable_info()
 weather = getData.weather_forcast()
 
-def get_switzerland_rankings()->pd.DataFrame:
-    """
-    This function returns a dataframe with hikes all over switzerland!
-    :return:
-        pd.DataFrame
-        contains information about hikes, stations, and train tips
-    """
-    siwss_df_path = os.path.dirname(__file__)+"/data/swiss_oa_df.obj"
-    if(os.path.exists(siwss_df_path)):
-        swiss_df = pd.read_pickle(siwss_df_path)
-        swiss_df = _calculate_ranking(swiss_df)
-    else:
-        raise IOError("could not find swiss df!")
-    return swiss_df
+backend_storage = storage.backend_storage()
+
+class backend_storage():
+    selected_trip:pd.DataFrame = None
+
+    def __init__(self):
+        self.selected_trip = None
+        self.ranked_data = None
+        pass
+
+    def get_selected_trip(self):
+        if(self.ranked_data == None):
+            self.get_switzerland_rankings()
+        return self.selected_trip
+
+    def get_ranked_data(self):
+        if(self.ranked_data == None):
+            self.get_switzerland_rankings()
+        return self.ranked_data
+
+    def get_switzerland_rankings(self)->pd.DataFrame:
+        """
+        This function returns a dataframe with hikes all over switzerland!
+        :return:
+            pd.DataFrame
+            contains information about hikes, stations, and train tips
+        """
+        siwss_df_path = os.path.dirname(__file__)+"/data/swiss_oa_df.obj"
+        if(os.path.exists(siwss_df_path)):
+            swiss_df = pd.read_pickle(siwss_df_path)
+            swiss_df = _calculate_ranking(swiss_df)
+            self.selected_trip = swiss_df.iloc[0]
+            print("HIKE", self.selected_trip)
+
+        else:
+            raise IOError("could not find swiss df!")
+        self.ranked_data= swiss_df
+
+        return swiss_df
 
 
-def get_trips_ranking(startLocation, starting_time, destination, destination_radius, verbose=False)->pd.DataFrame:
-    """
-    Generate convenient hike trips close to the destination. Gets slow for large Search areas!
+    def get_trips_ranking(self, startLocation, starting_time, destination, destination_radius, verbose=False)->pd.DataFrame:
+        """
+        Generate convenient hike trips close to the destination. Gets slow for large Search areas!
 
-    :param startLocation:   Where do you want to start
-    :param starting_time:   Time/Date to start
-    :param destination: Where do you want to go
-    :param destination_radius:  radius around the destination, that helps
-    :param verbose: I can talk!
-    :return:
-        pd.Dataframe
-            contains hike information, stations and trips.
-    """
-    # Get starting Info
-    if verbose: print("Get Information")
-    oa_df = _get_information(destination, destination_radius, startLocation, starting_time, verbose=verbose)
+        :param startLocation:   Where do you want to start
+        :param starting_time:   Time/Date to start
+        :param destination: Where do you want to go
+        :param destination_radius:  radius around the destination, that helps
+        :param verbose: I can talk!
+        :return:
+            pd.Dataframe
+                contains hike information, stations and trips.
+        """
+        # Get starting Info
+        if verbose: print("Get Information")
+        oa_df = _get_information(destination, destination_radius, startLocation, starting_time, verbose=verbose)
 
-    ## Feature extract
-    if verbose: print("Get Features")
-    print(oa_df.columns)
-    fastest_trip_time = pd.Series([float(x['t'])/60 for x in oa_df["fastestTripToDestination"]])
-    nsegments_trip = pd.Series([float(x['nSegments']) for x in oa_df["fastestTripToDestination"]])
-    last_mileDist = pd.Series([float(x['distanceToOA']) for x in oa_df["nextStation"]])
+        ## Feature extract
+        if verbose: print("Get Features")
+        print(oa_df.columns)
+        fastest_trip_time = pd.Series([float(x['t'].seconds)/60 for x in oa_df["fastestTripToDestination"]])
+        nsegments_trip = pd.Series([float(x['nSegments']) for x in oa_df["fastestTripToDestination"]])
+        last_mileDist = pd.Series([float(x['distanceToOA']) for x in oa_df["nextStation"]])
 
-    oa_df["feat_tripTime"] = fastest_trip_time
-    oa_df["feat_nsegments_trip"] = nsegments_trip
-    oa_df["feat_lastMile"] = last_mileDist
+        oa_df["feat_tripTime"] = fastest_trip_time
+        oa_df["feat_nsegments_trip"] = nsegments_trip
+        oa_df["feat_lastMile"] = last_mileDist
 
-    ## Rank Features:
-    oa_df = _calculate_ranking(oa_df)
-    return oa_df
+        ## Rank Features:
+        oa_df = _calculate_ranking(oa_df)
+        self.ranked_data= oa_df
+        return oa_df
 
 
 """
@@ -107,7 +135,7 @@ def _get_nextStation_trip(destinationStation_ID, startLocation_ID, starting_time
                                                   time=starting_time.time())
         # print(trip_request)
         trips = timetable.get_tripRequest(trip_request)
-        if (len(trips) == 0):
+        if (isinstance(trips, float) or (isinstance(trips, list) and len(trips) == 0)):
             return np.nan
         else:
             t_deltas = []
