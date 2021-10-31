@@ -392,7 +392,7 @@ class outdoor_active(api_interface):
     def get_image_info(self, ID=6128163, force:bool=False, url_mode=False)->str:
         if(not os.path.exists(self.img_tmpDir)):    #hack for notebooks
             self.img_tmpDir = "./tmp"
-            os.mkdir(self.img_tmpDir)
+            #os.mkdir(self.img_tmpDir)
         else:
             pass
             #print("found: ", self.img_tmpDir)

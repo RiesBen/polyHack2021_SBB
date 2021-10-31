@@ -90,6 +90,7 @@ def update_output(n_clicks, start_date, start_loc, dest_loc, dest_rad, start_tim
 """
 update map & routes once trip selected
 """
+'''
 @app.callback(
     Output('map', 'children'),
     Input('trip_0', 'n_clicks')
@@ -129,7 +130,7 @@ def update_map_3(n_clicks):
 def update_map_4(n_clicks):
     if n_clicks > 0:
         update_map(4)
-
+'''
 
 
 if __name__ == '__main__':
