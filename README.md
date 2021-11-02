@@ -1,5 +1,6 @@
 # polyHack2021_SBB
 This small app is a concept for an conveniet travel Idea with SBB. 
+Wuhu! This concept won the 3rd prize  for the SBB-Challenge at the polyHack 2021!
 
 ## Convenience
 All travel destinations are ranked by the traviling distance, the user rating, the last mile distance and the number of changes on the tracks.
